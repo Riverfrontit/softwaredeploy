@@ -1,0 +1,54 @@
+##COPY Installers PORTION OF SCRIPT
+##This sets the directories to copy the files into
+$sourceDirectory  = ".\*"
+$destinationDirectory = "C:\rtc-installers\"
+
+##This checks to see if directory exist if not creates directory and then copies all files into directory
+if (!(Test-Path -path $destinationDirectory)) {New-Item $destinationDirectory -Type Directory}
+Copy-item -Force -Recurse -Verbose $sourceDirectory -Destination $destinationDirectory
+
+
+##INSTALL PORTION OF SCRIPT
+##Imports .csv file and uses 2 fields Installer,Switch
+$path = "C:\rtc-installers\"  
+$softwares = import-csv .\pkgs.csv -Delimiter ',' -Header 'Installer','switch' | Select-Object Installer,Switch | Select-Object Installer,Switch
+
+foreach($software in $softwares){
+
+    $softexec = $software.Installer 
+    $softexec = $softexec.ToString()
+
+    $pkgs = get-childitem   $path$softexec | Where-Object {$_.Name -eq $softexec}
+
+    foreach($pkg in $pkgs){
+
+            $ext = [System.IO.Path]::GetExtension($pkg)
+            $ext = $ext.ToLower()
+
+            $switch = $software.Switch
+            $switch = $Switch.ToString()
+
+            if($ext -eq ".msi"){
+            mkdir c:\Temp\softwares\ -Force
+            Copy-Item "$path$softexec" -Recurse c:\Temp\Softwares -Force
+            Write-host "Installing $softexec Silently, please wait...." -BackgroundColor Yellow
+            Start-Process "c:\temp\softwares\$softexec" -Argumentlist "$switch" -wait
+
+            Remove-Item "c:\temp\softwares\$softexec completed" -Recurse -Force
+            Write-Host "Installation of $softexec completed" -BackgroundColor Green
+ 
+            }else{
+            mkdir c:\Temp\softwares\ -Force
+            Copy-Item "$path$softexec" -Recurse c:\Temp\Softwares -Force
+            Write-host "Installing $softexec Silently, please wait...." -BackgroundColor Yellow
+            Start-Process "c:\temp\softwares\$softexec" -Argumentlist "$switch" -wait -NoNewWindow
+
+            Remove-Item "c:\temp\softwares\$softexec completed" -Recurse -Force
+            Write-Host "Installation of $softexec completed"
+ 
+
+
+            }
+
+    }
+}
